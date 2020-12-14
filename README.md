@@ -1,1 +1,1 @@
-# data-from-apis-example
+# blog examples
