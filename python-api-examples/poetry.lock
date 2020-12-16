@@ -97,6 +97,14 @@ pycodestyle = ">=2.6.0a1,<2.7.0"
 pyflakes = ">=2.2.0,<2.3.0"
 
 [[package]]
+name = "haversine"
+version = "2.3.0"
+description = "Calculate the distance between 2 points on Earth."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "idna"
 version = "2.10"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -461,7 +469,7 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "5079baf5a3989cd718154cae5be3defd546755b96f5ae1090f39c9a1b2467aa2"
+content-hash = "28994e1f5402c28b321696ff46e9be150d81ea4726ba7aebd34e20ebcdc14001"
 
 [metadata.files]
 appdirs = [
@@ -498,6 +506,10 @@ colorama = [
 flake8 = [
     {file = "flake8-3.8.4-py2.py3-none-any.whl", hash = "sha256:749dbbd6bfd0cf1318af27bf97a14e28e5ff548ef8e5b1566ccfb25a11e7c839"},
     {file = "flake8-3.8.4.tar.gz", hash = "sha256:aadae8761ec651813c24be05c6f7b4680857ef6afaae4651a4eccaef97ce6c3b"},
+]
+haversine = [
+    {file = "haversine-2.3.0-py2.py3-none-any.whl", hash = "sha256:a0f2ea3cb419def98a8eb7a3fd0f0b3d97d679c160bae0699809410f33adfcb9"},
+    {file = "haversine-2.3.0.tar.gz", hash = "sha256:72c76855ac25e6ad054c7ed380e95c1a96803185f005dd11f40ccaa9620b551f"},
 ]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},

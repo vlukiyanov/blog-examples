@@ -1,14 +1,16 @@
 import json
+from functools import lru_cache
 from typing import List
 
 import pandas as pd
 import requests
+from haversine import haversine
 from pydantic import BaseModel
 from ratelimit import RateLimitException, limits
 from tenacity import *
 from yarl import URL
 
-from data_from_apis_example.secrets import APP_ID, APP_KEY
+from python_api_examples.secrets import APP_ID, APP_KEY
 
 
 def get_id_key():
@@ -32,19 +34,33 @@ def call_get(url: URL) -> str:
 API_ENDPOINT = URL("https://api.tfl.gov.uk/")
 
 
+@lru_cache()
+def tube_line_ids() -> List[str]:
+    return [
+        item["id"]
+        for item in json.loads(
+            call_get(API_ENDPOINT / "Line" / "Mode" / "tube" / "Route")
+        )
+    ]
+
+
 class LineStopPointInfo(BaseModel):
     name: str
-    lat: float
-    lon: float
+    distance: float
     connections: int
 
 
 def parse_result(result) -> LineStopPointInfo:
     return LineStopPointInfo(
         name=result["commonName"],
-        lat=result["lat"],
-        lon=result["lon"],
-        connections=len(result.get("lines", [])),
+        distance=haversine((51.509865, -0.118092), (result["lat"], result["lon"])),
+        connections=len(
+            [
+                item["id"]
+                for item in result.get("lines", [])
+                if item["id"] in tube_line_ids()
+            ]
+        ),
     )
 
 
@@ -61,4 +77,4 @@ def line_stop_df(line_id: str) -> pd.DataFrame:
     return pd.DataFrame([item.dict() for item in line_stop_points(line_id)])
 
 
-print(line_stop_points("victoria"))
+df = pd.concat([line_stop_df(line) for line in tube_line_ids()])
