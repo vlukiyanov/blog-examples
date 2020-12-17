@@ -4,11 +4,15 @@ from typing import List
 
 import pandas as pd
 import requests
+import seaborn as sns
 from haversine import haversine
-from pydantic import BaseModel, conint, confloat
+from pydantic import BaseModel, confloat, conint
 from ratelimit import RateLimitException, limits
 from tenacity import *
 from yarl import URL
+
+sns.set_theme(style="whitegrid")
+sns.set(rc={"figure.figsize": (10, 6)})
 
 from python_api_examples.secrets import APP_ID, APP_KEY
 
@@ -82,7 +86,8 @@ def parse_result(result) -> LineStopPointInfo:
                 for item in result.get("lines", [])
                 if item["id"] in tube_line_ids()
             ]
-        ) - 1,  # one result is always for the given line
+        )
+        - 1,  # one result is always for the given line
     )
 
 
@@ -113,4 +118,14 @@ def line_stop_df(line_id: str) -> pd.DataFrame:
     return pd.DataFrame([item.dict() for item in line_stop_points(line_id)])
 
 
-df = pd.concat([line_stop_df(line) for line in tube_line_ids()])
+df = pd.concat([line_stop_df(line) for line in tube_line_ids()]).drop_duplicates("name")
+
+plot = sns.boxenplot(
+    x="connections",
+    y="distance",
+    color="b",
+    scale="linear",
+    data=df,
+)
+
+plot.figure.savefig("figure.png")
