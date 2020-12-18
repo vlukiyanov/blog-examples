@@ -22,6 +22,7 @@ def get_id_key():
 
 
 @retry(
+    retry=retry_if_exception_type(requests.exceptions.RequestException),
     wait=wait_exponential(max=60, min=1),
     stop=stop_after_attempt(3),
 )
