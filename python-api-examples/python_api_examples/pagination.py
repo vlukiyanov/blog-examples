@@ -1,8 +1,9 @@
 import itertools
 from datetime import datetime
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, List, Optional
 
 import cytoolz
+import pandas as pd
 import pydantic
 import requests
 from pydantic import BaseModel
@@ -33,6 +34,7 @@ def call_get(url: URL) -> Dict[str, Any]:
     :param url: URL to make a GET request on for the Guardian API
     :return: parsed JSON result, as a dictionary
     """
+    print(url)
     return requests.get(url.update_query({"api-key": GUARDIAN_API_KEY})).json()
 
 
@@ -56,15 +58,15 @@ def iter_call_get(url: URL, page_size: int = 50) -> Iterable[Dict[str, Any]]:
 class SearchResult(BaseModel):
     id: str
     type: str
-    sectionId: str
-    sectionName: str
+    sectionId: Optional[str]
+    sectionName: Optional[str]
     webPublicationDate: datetime
     webTitle: str
-    webUrl: pydantic.AnyUrl
-    apiUrl: pydantic.AnyUrl
-    isHosted: bool
-    pillarId: str
-    pillarName: str
+    webUrl: Optional[pydantic.AnyUrl]
+    apiUrl: Optional[pydantic.AnyUrl]
+    isHosted: Optional[bool]
+    pillarId: Optional[str]
+    pillarName: Optional[str]
 
 
 def iter_search(q: str) -> Iterable[SearchResult]:
@@ -81,14 +83,38 @@ def iter_search(q: str) -> Iterable[SearchResult]:
 
 
 # Example query, first 10 results in the "Politics" section
-first_10_politics = cytoolz.take(10, (
-    item for item in iter_search("boris OR johnson") if item.sectionName == "Politics"
-))
-
-from cytoolz.curried import *
-
-first_10_politics_fancy = map(
-    compose(take(10), filter(lambda x: x.sectionName == "Politics")), iter_search("boris OR johnson")
+first_10_politics = cytoolz.take(
+    10,
+    (
+        item
+        for item in iter_search("boris OR johnson")
+        if item.sectionName == "Politics"
+    ),
 )
 
-print(list(first_10_politics_fancy))
+LABOUR_LEADERS = [
+    "keir OR starmer",
+]
+
+CONSERVATIVE_LEADERS = [
+    "boris OR (boris AND johnson)",
+]
+
+leaders = {
+    "conservative": CONSERVATIVE_LEADERS,
+    "labour": LABOUR_LEADERS
+}
+
+
+def iter_gather_data(leaders_list: List[str]) -> Iterable[SearchResult]:
+    for leader in leaders_list:
+        yield from itertools.takewhile(lambda x: x.webPublicationDate.year > 2019, iter_search(leader))
+
+
+df = pd.DataFrame([
+    {**item.dict(), "party": party}
+    for party in leaders
+    for item in iter_gather_data(leaders[party])
+])
+
+df.to_csv('1.csv', index=False)
